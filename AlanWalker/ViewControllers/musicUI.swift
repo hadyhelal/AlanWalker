@@ -14,17 +14,15 @@ class musicUI: UIViewController , AVAudioPlayerDelegate{
     var audio : AVAudioPlayer! = nil
     var sec = 0
     var min = 0
-    var musicData : MusicDataModel?
+
     var musicArray = [MusicDataModel] ()
     var currentIndexPath : Int?
-    var nextMusicIsRunning = false
-
+    
     @IBOutlet var musicNameLabel: UILabel!
     
     @IBOutlet var albumNameLabel: UILabel!
     
     @IBOutlet var songImage: UIImageView!
-    
     
     @IBOutlet var totalTimeLabel: UILabel!
     
@@ -38,81 +36,98 @@ class musicUI: UIViewController , AVAudioPlayerDelegate{
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        playMusic(playingAudioName: musicData!.musicName)
-        updateUI(musicTime: musicData!.musicTime)
-        totalTimeLabel.text = audio.durationWithMinAndSec()
-        musicNameLabel.text = musicData?.musicName
-        albumNameLabel.text = musicData?.musicAlbum
         
-        if let image = musicData?.musicImage{
-            songImage.image = UIImage(named: image)
-        }
+        //Start Playing The Selected Music
+        handleTheUpdateOfUI()
         
     }
     
     //MARK: - Playing Audio Functionaliy
     @IBAction func fastForward(_ sender: Any) {
-        updateUI(musicTime: musicArray[currentIndexPath! + 1].musicTime)
-        playMusic(playingAudioName: musicArray[currentIndexPath! + 1].musicName)
-        totalTimeLabel.text = audio.durationWithMinAndSec()
-        musicNameLabel.text = musicArray[currentIndexPath! + 1].musicName
-        albumNameLabel.text = musicArray[currentIndexPath! + 1].musicAlbum
-        songImage.image = UIImage(named: musicArray[currentIndexPath! + 1].musicImage)
-               
+       
+        currentIndexPath! += 1
         
+        if currentIndexPath! < musicArray.count , currentIndexPath! >= 0
+        {
+            handleTheUpdateOfUI()
+        }
+        else
+        {
+            currentIndexPath = 0
+            handleTheUpdateOfUI()
+        }
     }
+    
     @IBOutlet weak var playBtn: UIButton!
-    @IBAction func play(_ sender: Any) {
-        
+    @IBAction func play(_ sender: Any)
+    {
         
         updateUI()
     }
     
-    @IBAction func rewind(_ sender: Any) {
+    
+    @IBAction func rewind(_ sender: Any)
+    {
+       
+        currentIndexPath! -= 1
+      
+        if currentIndexPath! < musicArray.count , currentIndexPath! >= 0{
+       
+            handleTheUpdateOfUI()
+        }
+            
+        else {
+       
+            currentIndexPath = 0
+            handleTheUpdateOfUI()
+        }
     }
     
-
-
     
-    func updateUI(musicTime : Float = 0.0) {
+    
+    //MARK: - Update the UI Code
+    func updateUI() {
         if isRunning {
             
+            pauseMusicUI()
+      
+        }
             
-            isRunning.toggle()
-            runningTime.invalidate()
-            audio.pause()
-            playBtn.setImage(UIImage(named: "play"), for: .normal)
+        else{
             
-        }else{
-            
-            isRunning.toggle()
-            playBtn.setImage(UIImage(named: "pause"), for: .normal)
-            audio.play()
-            runningTime = Timer.scheduledTimer(timeInterval: 1.0, target: self, selector: #selector(updateProgress), userInfo: nil, repeats: true)
+            playMusicUI()
+       
         }
         
     }
     
     @objc func updateProgress () {
-          var progressAudioTime : Float = 0.0
-          if  nextMusicIsRunning {
-               progressAudioTime = musicArray[currentIndexPath! + 1].musicTime
-          } else{
-              progressAudioTime = musicData!.musicTime
-          }
+        var progressAudioTime : Float = 0.0
+        
+        
+        progressAudioTime = musicArray[currentIndexPath!].musicTime
+        
+        
         if ProgressMusciBar.progress >= 1 - (1 / progressAudioTime) {
+           
             runningTime.invalidate()
             ProgressMusciBar.progress = 0
             sec = 0 ; min = 0 ; showCurrentTime()
             playBtn.setImage(UIImage(named: "play"), for: .normal)
         }
         else {
-            if sec == 59 {
+            
+            if sec == 59
+            {
                 min += 1
                 sec = 0
                 showCurrentTime()
             }
-            else { sec += 1   ; showCurrentTime() }
+            else
+            {
+                sec += 1   ; showCurrentTime()
+                
+            }
             
             ProgressMusciBar.progress += 1 / progressAudioTime
             
@@ -121,24 +136,70 @@ class musicUI: UIViewController , AVAudioPlayerDelegate{
         }
     }
     // Show the current music time
-    func showCurrentTime () {
+    func showCurrentTime ()
+    {
         currentTimeLabel.text = "\(min.toString()):\(sec.toString())"
     }
     
     // MARK: - playingMusic
     
-    func playMusic (playingAudioName : String) {
+    func playMusic (playingAudioName : String)
+    {
         let url = Bundle.main.url(forResource: playingAudioName, withExtension: ".mp3")!
+        
         do {
             audio = try AVAudioPlayer(contentsOf: url)
-        } catch {
-            print("error while playing audio :: \(error)")
         }
-        musicData?.musicTime = Float(audio.duration)
+        catch
+        {
+            print("Error while playing audio :: \(error)")
+        }
+        musicArray[currentIndexPath!].musicTime = Float(audio.duration)
         audio.play()
+    }
+
+    
+    func handleTheUpdateOfUI()
+    {
         
+        if playBtn.imageView?.image != UIImage(named: "play") , audio != nil
+        {
+
+            pauseMusicUI()
+        }
+        
+        sec = 0
+        min = 0
+        ProgressMusciBar.progress = 0
+        showCurrentTime()
+        
+        playMusic(playingAudioName: musicArray[currentIndexPath!].musicName)
+        updateUI()
+        musicNameLabel.text = musicArray[currentIndexPath!].musicName
+        totalTimeLabel.text = audio.durationWithMinAndSec()
+        albumNameLabel.text = musicArray[currentIndexPath!].musicAlbum
+        songImage.image = UIImage(named: musicArray[currentIndexPath!].musicImage)
+        
+
     }
     
+    func pauseMusicUI()
+    {
+        isRunning.toggle()
+        runningTime.invalidate()
+        audio.pause()
+        playBtn.setImage(UIImage(named: "play"), for: .normal)
+    }
+    
+    
+    func playMusicUI()
+    {
+        isRunning.toggle()
+        playBtn.setImage(UIImage(named: "pause"), for: .normal)
+        audio.play()
+        runningTime = Timer.scheduledTimer(timeInterval: 1.0, target: self, selector: #selector(updateProgress), userInfo: nil, repeats: true)
+        
+    }
 }
 
 
@@ -154,7 +215,7 @@ extension AVAudioPlayer {
     }
 }
 
-//MARK: - Int Extension
+//MARK: - Int Extension Return the time in "00:00" Format
 extension Int {
     func toString() -> String {
         if (self < 10 && self >= 0) {

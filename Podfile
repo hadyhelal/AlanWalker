@@ -7,8 +7,6 @@ target 'AlanWalker' do
 
   # Pods for AlanWalker
 
-    pod 'SwipeCellKit'
-    pod 'RealmSwift'
     pod 'Firebase/Core'
     pod 'SVProgressHUD'
 end

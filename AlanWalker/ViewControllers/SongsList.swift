@@ -78,21 +78,14 @@ class SongsList : UITableViewController , AVAudioPlayerDelegate ,ObservableObjec
     
     //MARK: - Segue preparation
     
-    
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         let destination = segue.destination as! musicUI
         if let index = tableView.indexPathForSelectedRow {
-            destination.musicData = currentMusicArray[index.row]
             destination.musicArray = currentMusicArray
             destination.currentIndexPath = index.row
         }
     }
-    
-    
-    
-    
-    
-    
+      
     //MARK: - Load the music Data
     
     func loadData(album albumNameFetched : String, predicate: NSPredicate? = nil) {
