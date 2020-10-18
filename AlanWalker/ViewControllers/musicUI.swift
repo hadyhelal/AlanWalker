@@ -44,7 +44,7 @@ class musicUI: UIViewController , AVAudioPlayerDelegate{
     
     //MARK: - Playing Audio Functionaliy
     @IBAction func fastForward(_ sender: Any) {
-       
+        
         currentIndexPath! += 1
         
         if currentIndexPath! < musicArray.count , currentIndexPath! >= 0
